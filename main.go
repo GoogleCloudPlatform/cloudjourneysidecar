@@ -12,34 +12,9 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/", statusHandler)
 	http.HandleFunc("/status", statusHandler)
-	http.HandleFunc("/test", testHandler)
 	appengine.Main()
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	fmt.Fprint(w, "Hello, World!")
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	c := r.Context()
-	jobs, err := ListFunctions(c)
-	if err != nil {
-		handleError(c, w, errors.New("Could not retrieve a list of functions in the project: "+err.Error()))
-		return
-	}
-
-	b, err := json.Marshal(jobs)
-	if err != nil {
-		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
-		return
-	}
-	sendJSON(w, string(b))
 }
 
 type Status struct {
