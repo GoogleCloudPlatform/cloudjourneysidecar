@@ -17,12 +17,15 @@ func main() {
 	appengine.Main()
 }
 
+// Status is a quest name and whether or not it has been completed. Additionally
+// notes can be provided for more context.
 type Status struct {
 	Quest    string `json:"quest"`
 	Complete bool   `json:"complete"`
 	Notes    string `json:"notes"`
 }
 
+// StatusList is a slice of Statii.
 type StatusList []Status
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +65,7 @@ func checkIntroSys(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_sys"
 
-	vms, err := ListInstances(c)
+	vms, err := listInstances(c)
 	if err != nil {
 		return s, fmt.Errorf("SQ_intro: %v", err)
 	}
@@ -80,7 +83,7 @@ func checkIntroBigData(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_bigdata"
 
-	jobs, err := ListJobs(c)
+	jobs, err := listJobs(c)
 	if err != nil {
 		return s, fmt.Errorf("SQ_intro: %v", err)
 	}
@@ -98,7 +101,7 @@ func checkIntroDev(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_dev"
 
-	funcs, err := ListFunctions(c)
+	funcs, err := listFunctions(c)
 	if err != nil {
 		if strings.Index(err.Error(), "Cloud Functions API has not been used") > -1 {
 			s.Notes = "API not enabled yet."

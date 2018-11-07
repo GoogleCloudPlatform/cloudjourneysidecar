@@ -20,7 +20,7 @@ func getService(c context.Context) (*compute.Service, error) {
 
 }
 
-func ListInstances(c context.Context) (*compute.InstanceList, error) {
+func listInstances(c context.Context) (*compute.InstanceList, error) {
 	vms := new(compute.InstanceList)
 
 	srv, err := getService(c)

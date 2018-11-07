@@ -21,7 +21,7 @@ func getCloudFunctionsService(c context.Context) (*cloudfunctions.Service, error
 
 }
 
-func ListFunctions(c context.Context) (*cloudfunctions.ListFunctionsResponse, error) {
+func listFunctions(c context.Context) (*cloudfunctions.ListFunctionsResponse, error) {
 	funcs := new(cloudfunctions.ListFunctionsResponse)
 
 	srv, err := getCloudFunctionsService(c)

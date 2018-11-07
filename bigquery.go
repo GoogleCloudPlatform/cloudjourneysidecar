@@ -20,7 +20,7 @@ func getBigQueryService(c context.Context) (*bigquery.Service, error) {
 
 }
 
-func ListJobs(c context.Context) (*bigquery.JobList, error) {
+func listJobs(c context.Context) (*bigquery.JobList, error) {
 	jobs := new(bigquery.JobList)
 
 	srv, err := getBigQueryService(c)
