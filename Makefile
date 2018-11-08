@@ -8,6 +8,7 @@ env:
 	gcloud config set compute/zone $(ZONE)
 
 deploy: env
+	export GOPATH=$(GOPATH):$(BASEDIR)
 	gcloud app deploy -q
 
 create: env
