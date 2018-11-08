@@ -20,7 +20,7 @@ Should output:
 [{
   "quest": "intro_sys",
   "complete": false,
-  "notes": ""
+  "notes": "API not enabled yet."
 }, {
   "quest": "intro_bigdata",
   "complete": false,
