@@ -67,6 +67,10 @@ func checkIntroSys(c context.Context) (Status, error) {
 
 	vms, err := listInstances(c)
 	if err != nil {
+		if strings.Index(err.Error(), "Compute Engine API has not been used") > -1 {
+			s.Notes = "API not enabled yet."
+			return s, nil
+		}
 		return s, fmt.Errorf("SQ_intro: %v", err)
 	}
 
@@ -85,7 +89,7 @@ func checkIntroBigData(c context.Context) (Status, error) {
 
 	jobs, err := listJobs(c)
 	if err != nil {
-		return s, fmt.Errorf("SQ_intro: %v", err)
+		return s, fmt.Errorf("BQ_intro: %v", err)
 	}
 
 	for _, v := range jobs.Jobs {
@@ -107,7 +111,7 @@ func checkIntroDev(c context.Context) (Status, error) {
 			s.Notes = "API not enabled yet."
 			return s, nil
 		}
-		return s, fmt.Errorf("SQ_intro: %v", err)
+		return s, fmt.Errorf("DEV_intro: %v", err)
 	}
 
 	for _, v := range funcs.Functions {
