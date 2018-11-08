@@ -26,7 +26,7 @@
     "context/ctxhttp",
   ]
   pruneopts = "UT"
-  revision = "10aee181995363b41f712a55844a0dd52ea04646"
+  revision = "03003ca0c849e57b6ea29a4bab8d3cb6e4d568fe"
 
 [[projects]]
   branch = "master"
@@ -44,7 +44,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9caf05c844989ca21fe2c86e70ed3a30d603afb203d634db811fde09dc92490b"
+  digest = "1:f0b079075296822076ecd1874e2a14edfa053e3198a3bd6acf53ee6879775a81"
   name = "google.golang.org/api"
   packages = [
     "bigquery/v2",
@@ -55,7 +55,7 @@
     "googleapi/internal/uritemplates",
   ]
   pruneopts = "UT"
-  revision = "04bb50b6b83d0e72253821af8cf3252d8e866517"
+  revision = "cfbc873f6b93790282bed8e31e7f7df417caee1b"
 
 [[projects]]
   digest = "1:ff1d099eaac616cfb0eb941e5a6b5371880130dcd50cd449b5c1a6522a1b1c41"
