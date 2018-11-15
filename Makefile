@@ -19,4 +19,4 @@ install: env create deploy permissions
 
 
 permissions: 
-	gcloud iam service-accounts add-iam-policy-binding $(PROJECT)@appspot.gserviceaccount.com --member=serviceAccount:$(PROJECT)@appspot.gserviceaccount.com --role=roles/owner
+	gcloud projects add-iam-policy-binding $(PROJECT) --member serviceAccount:$(PROJECT)@appspot.gserviceaccount.com --role roles/bigquery.admin
