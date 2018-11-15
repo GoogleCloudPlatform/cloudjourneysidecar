@@ -12,9 +12,25 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", statusHandler)
-	http.HandleFunc("/status", statusHandler)
+	http.HandleFunc("/", protectFunc(healthHandler))
+	http.HandleFunc("/status", protectFunc(statusHandler))
+	http.HandleFunc("/healthz", protectFunc(healthHandler))
 	appengine.Main()
+}
+
+func protectFunc(hf func(http.ResponseWriter,
+	*http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			r := recover()
+			if r != nil {
+				// hf() paniced, we just recovered from it.
+				// Handle error somehow, serve custom error page.
+				w.Write([]byte("Something went bad but I recovered and sent this!"))
+			}
+		}()
+		hf(w, r)
+	}
 }
 
 // Status is a quest name and whether or not it has been completed. Additionally
@@ -59,6 +75,10 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendJSON(w, string(b))
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	sendJSON(w, "ok")
 }
 
 func checkIntroSys(c context.Context) (Status, error) {
