@@ -17,6 +17,7 @@ func main() {
 	http.HandleFunc("/", healthHandler)
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
+
 	appengine.Main()
 }
 
@@ -73,7 +74,7 @@ func checkIntroSys(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_sys"
 
-	vms, err := listInstances(c)
+	vms, err := listAllInstances(c)
 	if err != nil {
 		if strings.Index(err.Error(), "Compute Engine API has not been used") > -1 {
 			s.Notes = "API not enabled yet."
@@ -83,10 +84,13 @@ func checkIntroSys(c context.Context) (Status, error) {
 	}
 
 	for _, v := range vms.Items {
+		s.Notes = "VM does not have 8 cores and 42 GBs of memory"
 		if strings.Index(v.MachineType, "custom-8-43008") > -1 {
 			s.Complete = true
+			s.Notes = ""
 			break
 		}
+
 	}
 	return s, nil
 }
