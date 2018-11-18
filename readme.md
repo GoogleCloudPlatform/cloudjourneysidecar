@@ -12,7 +12,7 @@ you created.
 * run `git clone https://github.com/tpryan/GCPQuest-Companion.git`
 * run `cd GCPQuest-Companion`
 * run `make`
-* browse to `https://[project id].appspot.com/`
+* browse to `https://[project id].appspot.com/status`
 
 Should output: 
 
