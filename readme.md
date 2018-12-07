@@ -7,8 +7,6 @@ to get GCPQuest to work.
 * Create New Project (Must limit length to 16 chars)
 * Navigate to Compute Engine in Cloud Console - wait for GCE to be activated
 * Open Cloud Shell in Project
-* run `export PROJECT=[project id]` where project id is the id of the project 
-you created.
 * run `git clone https://github.com/tpryan/GCPQuest-Companion.git`
 * run `cd GCPQuest-Companion`
 * run `make`
