@@ -1,3 +1,4 @@
+PROJECT=$(shell gcloud config list project --format=flattened | awk 'FNR == 1 {print $$2}')
 ZONE=us-central1-c
 REGION=us-central
 BASEDIR = $(shell pwd)

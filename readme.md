@@ -6,8 +6,6 @@ It must be installed in your GCP project to get GCPQuest to work.
 ## Steps
 * Create New Project (Must limit length to 16 chars)
 * Open Cloud Shell in Project
-* run `export PROJECT=[project id]` where project id is the id of the project 
-you created.
 * run `git clone https://github.com/tpryan/GCPQuest-Companion.git`
 * run `cd GCPQuest-Companion`
 * run `make`
