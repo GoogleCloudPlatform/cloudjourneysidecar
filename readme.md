@@ -1,11 +1,10 @@
 # Companion app for GCP Quest. 
 
-This is the companion app for GCPQuest. It must be installed in your GCP project
-to get GCPQuest to work. 
+Thanks for agreeing to test GCPQuest. This is the companion app for GCPQuest. 
+It must be installed in your GCP project to get GCPQuest to work. 
 
 ## Steps
 * Create New Project (Must limit length to 16 chars)
-* Navigate to Compute Engine in Cloud Console - wait for GCE to be activated
 * Open Cloud Shell in Project
 * run `export PROJECT=[project id]` where project id is the id of the project 
 you created.
@@ -31,3 +30,5 @@ Should output:
   "notes": "API not enabled yet."
 }]
 ```
+
+If that's working **congrats**, you're all set to play. 
