@@ -80,12 +80,12 @@ func checkIntroSys(c context.Context) (Status, error) {
 			s.Notes = "API not enabled yet."
 			return s, nil
 		}
-		return s, fmt.Errorf("SQ_intro: %v", err)
+		return s, fmt.Errorf("tut_sys1: %v", err)
 	}
 
 	for _, v := range vms.Items {
-		s.Notes = "VM does not have 8 cores and 42 GBs of memory"
-		if strings.Index(v.MachineType, "custom-8-43008") > -1 {
+		s.Notes = "VM is not of type f1-micro"
+		if strings.Index(v.MachineType, "f1-micro") > -1 {
 			s.Complete = true
 			s.Notes = ""
 			break
@@ -101,7 +101,7 @@ func checkIntroBigData(c context.Context) (Status, error) {
 
 	jobs, err := listJobs(c)
 	if err != nil {
-		return s, fmt.Errorf("BQ_intro: %v", err)
+		return s, fmt.Errorf("tut_dsc1: %v", err)
 	}
 
 	for _, v := range jobs.Jobs {
@@ -123,7 +123,7 @@ func checkIntroDev(c context.Context) (Status, error) {
 			s.Notes = "API not enabled yet."
 			return s, nil
 		}
-		return s, fmt.Errorf("DEV_intro: %v", err)
+		return s, fmt.Errorf("tut_dev1: %v", err)
 	}
 
 	for _, v := range funcs.Functions {
