@@ -11,7 +11,7 @@ deploy: env permissions
 	gcloud app deploy -q
 
 create: env
-	gcloud app create --region=us-central -q
+	-gcloud app create --region=us-central -q
 
 install: env create deploy permissions check
 
