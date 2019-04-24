@@ -1,5 +1,4 @@
 PROJECT=$(GOOGLE_CLOUD_PROJECT)
-ZONE=$(CLOUD_JOURNEY_ZONE)
 REGION=$(CLOUD_JOURNEY_REGION)
 BASEDIR = $(shell pwd)
 .DEFAULT_GOAL := install
@@ -7,7 +6,6 @@ BASEDIR = $(shell pwd)
 
 env:
 	gcloud config set project $(PROJECT)
-	gcloud config set compute/zone $(ZONE)
 
 deploy: env permissions
 	export GOPATH=$(GOPATH):$(BASEDIR)
