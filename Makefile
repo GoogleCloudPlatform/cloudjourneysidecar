@@ -1,6 +1,6 @@
-PROJECT=$(GOOGLE_CLOUD_PROJECT)
-ZONE=us-central1-c
-REGION=us-central
+PROJECT=$(CLOUD_JOURNEY_PROJECT)
+ZONE=$(CLOUD_JOURNEY_ZONE)
+REGION=$(CLOUD_JOURNEY_REGION)
 BASEDIR = $(shell pwd)
 .DEFAULT_GOAL := install
 
@@ -9,17 +9,14 @@ env:
 	gcloud config set project $(PROJECT)
 	gcloud config set compute/zone $(ZONE)
 
-deploy: env
+deploy: env permissions
 	export GOPATH=$(GOPATH):$(BASEDIR)
 	gcloud app deploy -q
-
-deploy.container: env
-	gcloud app deploy -q --image-url=gcr.io/instruqt-shadow/gcpquesthelper
 
 create: env
 	gcloud app create --region=$(REGION) -q
 
-install: env create deploy permissions
+install: env create deploy permissions check
 
 
 permissions: 
@@ -32,11 +29,5 @@ main:
 build: main
 	docker build -t helper "$(BASEDIR)/."
 
-
-serve: 
-	docker run --name=helper -d -P -p 8080:8080  helper
-
-clean:
-	-docker stop helper
-	-docker rm helper
-	-docker rmi helper	
+check:
+	curl https://$(PROJECT).appspot.com/health
