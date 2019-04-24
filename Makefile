@@ -1,5 +1,4 @@
 PROJECT=$(GOOGLE_CLOUD_PROJECT)
-REGION=$(CLOUD_JOURNEY_REGION)
 BASEDIR = $(shell pwd)
 .DEFAULT_GOAL := install
 
@@ -12,7 +11,7 @@ deploy: env permissions
 	gcloud app deploy -q
 
 create: env
-	gcloud app create --region=$(REGION) -q
+	gcloud app create --region=us-central -q
 
 install: env create deploy permissions check
 
