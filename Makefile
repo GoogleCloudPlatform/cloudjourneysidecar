@@ -1,4 +1,4 @@
-PROJECT=gcpquest-2019
+PROJECT=$(GOOGLE_CLOUD_PROJECT)
 ZONE=us-central1-c
 REGION=us-central
 BASEDIR = $(shell pwd)
