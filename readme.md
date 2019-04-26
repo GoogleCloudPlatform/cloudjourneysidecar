@@ -1,7 +1,15 @@
-# Companion app for GCP Quest. 
+# Cloud Journey
+## Sidecar application
 
-Thanks for agreeing to test GCPQuest. This is the companion app for GCPQuest. 
-It must be installed in your GCP project to get GCPQuest to work. 
+This is the companion app for Cloud Journey. 
+It must be installed in your GCP project to get Cloud Journey to work. 
+
+
+### Requirements
+* Create ENV variables
+* `export CLOUD_JOURNEY_ZONE=[Zone to install the app in ]`
+* `export CLOUD_JOURNEY_REGION=[Region to install the app in ]`
+* `export CLOUD_JOURNEY_PROJECT=[ID of a project that you want to use for testing]`
 
 ## Steps
 * Create New Project (Must limit length to 16 chars)
