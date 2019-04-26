@@ -38,3 +38,5 @@ Should output:
 ```
 
 If that's working **congrats**, you're all set to play. 
+
+"This is not an official Google Project."
