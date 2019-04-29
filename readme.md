@@ -12,7 +12,7 @@ It must be installed in your GCP project to get Cloud Journey to work.
 * `export CLOUD_JOURNEY_PROJECT=[ID of a project that you want to use for testing]`
 
 ## Steps
-* Create New Project (Must limit length to 16 chars)
+* Create New Project (Must limit length to 30 chars)
 * Open Cloud Shell in Project
 * run `git clone https://github.com/tpryan/GCPQuest-Companion.git`
 * run `cd GCPQuest-Companion`
@@ -38,5 +38,15 @@ Should output:
 ```
 
 If that's working **congrats**, you're all set to play. 
+
+## What does it do? 
+The code in this repo when launched as an App Engine Application will 
+interogate your project using Public GCP API's and try to figure out if you 
+have properly completed the steps in Cloud Joruney's tutorials. It will try and 
+figure out 3 things:
+
+* Is there an f1micro Compute Engine Instance
+* Is there there a Cloud Function named tokengenerator
+* Was a BigQuery query run that searched *bigquery-public-data.usa_names.usa_1910_2013*
 
 "This is not an official Google Project."
