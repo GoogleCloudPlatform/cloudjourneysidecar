@@ -20,7 +20,8 @@ import (
 )
 
 func getBigQueryService(c context.Context) (*bigquery.Service, error) {
-	cTimed, _ := context.WithDeadline(c, time.Now().Add(60*time.Second))
+	cTimed, cancel := context.WithDeadline(c, time.Now().Add(60*time.Second))
+	defer cancel()
 
 	client, err := google.DefaultClient(cTimed, bigquery.BigqueryScope)
 	if err != nil {

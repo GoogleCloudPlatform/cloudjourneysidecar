@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"google.golang.org/appengine/log"
 
@@ -116,8 +117,19 @@ func checkIntroBigData(c context.Context) (Status, error) {
 
 	for _, v := range jobs.Jobs {
 		if strings.Index(v.Configuration.Query.Query, "bigquery-public-data.usa_names.usa_1910_2013") > -1 {
-			s.Complete = true
-			break
+			t := time.Unix(v.Statistics.EndTime/1000, 0)
+			start := time.Now() 
+			limit := start.AddDate(0, -1, 0)
+			d := start.Sub(limit)
+
+			if (d.Hours() < 1){
+				s.Complete = true
+				s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
+				break
+			}
+			s.Notes = fmt.Sprintf("more than an hour old: %s", t.Format("2006-01-02T15:04:05"))
+			
+			
 		}
 	}
 	return s, nil
