@@ -28,6 +28,7 @@ func main() {
 	http.HandleFunc("/", healthHandler)
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
+	http.HandleFunc("/disks", diskHandler)
 
 	appengine.Main()
 }
@@ -54,6 +55,13 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	statii = append(statii, sqIntro)
 
+	sq02, err := checkSys02(c)
+	if err != nil {
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sq02.Quest, err))
+		return
+	}
+	statii = append(statii, sq02)
+
 	bqIntro, err := checkIntroBigData(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", bqIntro.Quest, err))
@@ -69,6 +77,23 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	statii = append(statii, devIntro)
 
 	b, err := json.Marshal(statii)
+	if err != nil {
+		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
+		return
+	}
+	sendJSON(w, string(b))
+}
+
+func diskHandler(w http.ResponseWriter, r *http.Request) {
+	c := r.Context()
+
+	disks, err := listAllDisks(c)
+	if err != nil {
+		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", disks, err))
+		return
+	}
+
+	b, err := json.Marshal(disks)
 	if err != nil {
 		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
 		return
@@ -106,6 +131,28 @@ func checkIntroSys(c context.Context) (Status, error) {
 	return s, nil
 }
 
+func checkSys02(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "02_sys"
+
+	disks, err := listAllDisks(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_sys2: %v", err)
+	}
+
+	for _, v := range disks.Items {
+		s.Notes = "Could not find an unimaged and attached disk"
+		if len(v.Users) > 0 && v.SourceImage == "" {
+			s.Complete = true
+			s.Notes = ""
+			break
+		}
+
+	}
+	return s, nil
+}
+
+
 func checkIntroBigData(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_bigdata"
@@ -118,17 +165,18 @@ func checkIntroBigData(c context.Context) (Status, error) {
 	for _, v := range jobs.Jobs {
 		if strings.Index(v.Configuration.Query.Query, "bigquery-public-data.usa_names.usa_1910_2013") > -1 {
 			t := time.Unix(v.Statistics.EndTime/1000, 0)
-			start := time.Now() 
-			limit := start.AddDate(0, -1, 0)
-			d := start.Sub(limit)
+			// start := time.Now() 
+			// limit := start.Add(time.Hour * time.Duration(-1))
+			// d := limit.Sub(t)
 
-			if (d.Hours() < 1){
-				s.Complete = true
-				s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
-				break
-			}
-			s.Notes = fmt.Sprintf("more than an hour old: %s", t.Format("2006-01-02T15:04:05"))
-			
+			// if (d.Hours() < 1){
+			// 	s.Complete = true
+			// 	s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
+			// 	break
+			// }
+			// s.Notes = fmt.Sprintf("more than an hour old: %s", t.Format("2006-01-02T15:04:05"))
+			s.Complete = true
+			s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
 			
 		}
 	}

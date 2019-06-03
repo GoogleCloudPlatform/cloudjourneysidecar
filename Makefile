@@ -17,11 +17,16 @@ install: env create deploy permissions check
 
 
 permissions: 
-	gcloud projects add-iam-policy-binding $(PROJECT) --member serviceAccount:$(PROJECT)@appspot.gserviceaccount.com --role roles/bigquery.admin
+	gcloud projects add-iam-policy-binding $(PROJECT) \
+	--member serviceAccount:$(PROJECT)@appspot.gserviceaccount.com \
+	--role roles/bigquery.admin
 
 
 main:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$(BASEDIR)/main" "$(BASEDIR)/main.go" "$(BASEDIR)/responders.go" "$(BASEDIR)/vm.go"  "$(BASEDIR)/functions.go" "$(BASEDIR)/bigquery.go" 
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$(BASEDIR)/main" \
+	"$(BASEDIR)/main.go" "$(BASEDIR)/responders.go" \
+	"$(BASEDIR)/gcp_compute.go"  "$(BASEDIR)/gcp_dev.go" \
+	"$(BASEDIR)/gcp_data.go" 
 
 build: main
 	docker build -t helper "$(BASEDIR)/."
