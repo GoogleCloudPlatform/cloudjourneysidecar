@@ -120,7 +120,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	
 	content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, false,"Version check working as expected")
 	sendJSON(w, content)
-	log.Infof(r.Context(), "Version Check triggered.")
+	log.Infof(r.Context(), "Version check triggered.")
 }
 
 func checkIntroSys(c context.Context) (Status, error) {
