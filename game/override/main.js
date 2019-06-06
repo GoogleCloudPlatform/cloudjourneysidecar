@@ -40,6 +40,8 @@ function setRemoteStatus(label, id){
     return results;
 }
 
+
+
 function checkHealth(){
     var project = "NOTAVALIDPROJECTNAME";
     if (typeof $gameActors.actor(5).name() != 'undefined'){
@@ -74,6 +76,39 @@ function checkHealth(){
 
 
     return response; 
+}
+
+
+function checkVersion(){
+
+  var xhr = new XMLHttpRequest();
+  try{
+    xhr.open("GET", "https://"+project+".appspot.com/version", false);
+    xhr.send();
+  } catch(exception) {
+      console.log('Bad project.');
+      return false;
+  }
+
+  if (xhr.status == 404){
+      console.log('Version isn\'t set, update.');
+      return false;
+  }
+
+  var results = JSON.parse(xhr.responseText);
+
+  if (results.update){
+      console.log('Backend says update.');
+      return false;
+  }
+
+  if (results.version == sidecarversion){
+    console.log('Version set and matches, no update.');
+    return true;
+  }
+
+  console.log('For some reason, update.');
+  return false; 
 }
 
 function popUp(url){
