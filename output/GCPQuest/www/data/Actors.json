@@ -1,0 +1,8 @@
+[
+null,
+{"id":1,"battlerName":"Developer","characterIndex":0,"characterName":"Developer","classId":6,"equips":[1,1,2,3,0],"faceIndex":0,"faceName":"Developer","traits":[],"initialLevel":1,"maxLevel":99,"name":"Harold","nickname":"","note":"","profile":""},
+{"id":2,"battlerName":"developer2","characterIndex":0,"characterName":"sprite-01-maincharacter","classId":5,"equips":[0,0,0,0,0],"faceIndex":1,"faceName":"cj-character-headshots","traits":[],"initialLevel":1,"maxLevel":99,"name":"Moira","nickname":"","note":"","profile":""},
+{"id":3,"battlerName":"bigdata","characterIndex":0,"characterName":"sprite-10-datascientist","classId":7,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"cj-character-headshots","traits":[],"initialLevel":1,"maxLevel":99,"name":"Kay","nickname":"","note":"","profile":""},
+{"id":4,"battlerName":"sysadmin","characterIndex":0,"characterName":"sprite-04-sys","classId":8,"equips":[0,0,0,0,0],"faceIndex":4,"faceName":"cj-character-headshots","traits":[{"code":41,"dataId":3,"value":1}],"initialLevel":1,"maxLevel":99,"name":"Malcolm","nickname":"","note":"","profile":""},
+{"id":5,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"Change Me","nickname":"","note":"","profile":""}
+]

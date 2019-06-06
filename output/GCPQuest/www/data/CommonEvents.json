@@ -1,0 +1,14 @@
+[
+null,
+{"id":1,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/compute/instances\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Manage VMs","switchId":1,"trigger":0},
+{"id":2,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/compute/snapshots\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Manage Snapshots","switchId":1,"trigger":0},
+{"id":3,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/compute/images\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Manage Images","switchId":1,"trigger":0},
+{"id":4,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/networking/firewalls/list\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Check Firewall","switchId":1,"trigger":0},
+{"id":5,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/functions/list\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Manage Cloud Functions","switchId":1,"trigger":0},
+{"id":6,"list":[{"code":355,"indent":0,"parameters":["window.open(\"https://console.cloud.google.com/bigquery\")"]},{"code":0,"indent":0,"parameters":[]}],"name":"Manage BigQuery","switchId":1,"trigger":0},
+{"id":7,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
+{"id":8,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
+{"id":9,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
+{"id":10,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
+{"id":11,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0}
+]
