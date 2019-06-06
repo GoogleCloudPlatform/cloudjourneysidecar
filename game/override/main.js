@@ -84,10 +84,11 @@ function checkVersion(){
   var xhr = new XMLHttpRequest();
   try{
     var endpoint = "https://"+project+".appspot.com/version";
+    console.log('Endpoint:', endpoint);
     xhr.open("GET", endpoint, false);
     xhr.send();
   } catch(exception) {
-      console.log('Bad project:', "https://"+project+".appspot.com/version");
+      console.log('Bad project');
       return false;
   }
 
