@@ -10,7 +10,7 @@ window.onload = function() {
     
 };
 
-var sidecarversion = 13;
+var sidecarversion = 16;
 var links = {};
 buildLinks();
 
@@ -34,10 +34,14 @@ function setRemoteStatus(label, id){
     for (var i = 0; i < results.length; i++){
         var r = results[i];
         if (r.quest == label && r.complete){
-            $gameSwitches.setValue(id, r.complete);
+            setProject(id, r.complete);
         }
     }
     return results;
+}
+
+function setProject(id, value){
+    $gameSwitches.setValue(id, value);
 }
 
 
@@ -47,7 +51,8 @@ function checkHealth(){
     if (typeof $gameActors.actor(5).name() != 'undefined'){
       project = $gameActors.actor(5).name().trim();
     }
-    
+    var response = {};
+    response.works = false; 
 
     var xhr = new XMLHttpRequest();
     try{
@@ -55,14 +60,11 @@ function checkHealth(){
       xhr.send();
     } catch(exception) {
         console.log('Bad project.');
-        var response = {};
-        response.works = false; 
         return response;
     }
    
 
-    var response = {};
-    response.works = false; 
+    
 
     if (xhr.status == 404){
         return response;
@@ -80,13 +82,19 @@ function checkHealth(){
 
 
 function checkVersion(){
-
+  var project = "NOTAVALIDPROJECTNAME";
+  if (typeof $gameActors.actor(5).name() != 'undefined'){
+    project = $gameActors.actor(5).name().trim();
+  }
   var xhr = new XMLHttpRequest();
   try{
-    xhr.open("GET", "https://"+project+".appspot.com/version", false);
+    var endpoint = "https://"+project+".appspot.com/version";
+    console.log('Endpoint:', endpoint);
+    xhr.open("GET", endpoint, false);
     xhr.send();
   } catch(exception) {
-      console.log('Bad project.');
+      console.log(exception);
+      console.log('Bad project');
       return false;
   }
 
