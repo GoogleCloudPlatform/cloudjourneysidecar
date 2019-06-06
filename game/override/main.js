@@ -86,7 +86,6 @@ function checkVersion(){
   if (typeof $gameActors.actor(5).name() != 'undefined'){
     project = $gameActors.actor(5).name().trim();
   }
-
   
   var xhr = new XMLHttpRequest();
   try{
