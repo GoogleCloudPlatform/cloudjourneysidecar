@@ -99,6 +99,8 @@ function checkVersion(){
       return false;
   }
   
+
+  
   if (xhr.status == 404){
       console.log('Version isn\'t set, update.');
       return false;
