@@ -82,6 +82,7 @@ function checkHealth(){
 
 
 function checkVersion(){
+  console.log('Check version called.');
   var project = "NOTAVALIDPROJECTNAME";
   if (typeof $gameActors.actor(5).name() != 'undefined'){
     project = $gameActors.actor(5).name().trim();
@@ -118,7 +119,7 @@ function checkVersion(){
     return true;
   }
 
-  console.log('For some reason, update.');
+  console.log('Results version:', results.version, "Game sidecarversion:", sidecarversion);
   return false; 
 }
 

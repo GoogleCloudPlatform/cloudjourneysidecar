@@ -10,7 +10,7 @@ window.onload = function() {
     
 };
 
-var sidecarversion = 16;
+var sidecarversion = 23;
 var links = {};
 buildLinks();
 
@@ -82,10 +82,12 @@ function checkHealth(){
 
 
 function checkVersion(){
+  console.log('Check version called.');
   var project = "NOTAVALIDPROJECTNAME";
   if (typeof $gameActors.actor(5).name() != 'undefined'){
     project = $gameActors.actor(5).name().trim();
   }
+  
   var xhr = new XMLHttpRequest();
   try{
     var endpoint = "https://"+project+".appspot.com/version";
@@ -97,7 +99,9 @@ function checkVersion(){
       console.log('Bad project');
       return false;
   }
+  
 
+  
   if (xhr.status == 404){
       console.log('Version isn\'t set, update.');
       return false;
@@ -115,7 +119,7 @@ function checkVersion(){
     return true;
   }
 
-  console.log('For some reason, update.');
+  console.log('Results version:', results.version, "Game sidecarversion:", sidecarversion);
   return false; 
 }
 
