@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"io/ioutil"
+	"strconv"
 
 	"google.golang.org/appengine/log"
 
@@ -28,7 +30,7 @@ func main() {
 	http.HandleFunc("/", healthHandler)
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/disks", diskHandler)
+	http.HandleFunc("/version", versionHandler)
 
 	appengine.Main()
 }
@@ -106,6 +108,21 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	log.Infof(r.Context(), "Health Check triggered.")
 }
 
+func versionHandler(w http.ResponseWriter, r *http.Request) {
+	c := r.Context()
+	v, err := checkVersion(c) 
+	if err != nil {
+		content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, true,err)
+		sendJSON(w, content)
+		log.Warningf(r.Context(), "Error in version check %s.", err)
+		return
+	}
+	
+	content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, false,"Version check working as expected")
+	sendJSON(w, content)
+	log.Infof(r.Context(), "Version check triggered.")
+}
+
 func checkIntroSys(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_sys"
@@ -152,7 +169,6 @@ func checkSys02(c context.Context) (Status, error) {
 	return s, nil
 }
 
-
 func checkIntroBigData(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_bigdata"
@@ -165,16 +181,6 @@ func checkIntroBigData(c context.Context) (Status, error) {
 	for _, v := range jobs.Jobs {
 		if strings.Index(v.Configuration.Query.Query, "bigquery-public-data.usa_names.usa_1910_2013") > -1 {
 			t := time.Unix(v.Statistics.EndTime/1000, 0)
-			// start := time.Now() 
-			// limit := start.Add(time.Hour * time.Duration(-1))
-			// d := limit.Sub(t)
-
-			// if (d.Hours() < 1){
-			// 	s.Complete = true
-			// 	s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
-			// 	break
-			// }
-			// s.Notes = fmt.Sprintf("more than an hour old: %s", t.Format("2006-01-02T15:04:05"))
 			s.Complete = true
 			s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
 			
@@ -204,3 +210,17 @@ func checkIntroDev(c context.Context) (Status, error) {
 	}
 	return s, nil
 }
+
+func checkVersion(c context.Context) (int, error) {
+	dat, err := ioutil.ReadFile(".version")
+    if err != nil {
+		return 0, err
+	}
+	i, err := strconv.Atoi(string(dat))
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
+
+
+}	

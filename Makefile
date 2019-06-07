@@ -1,5 +1,8 @@
 PROJECT=$(GOOGLE_CLOUD_PROJECT)
 BASEDIR = $(shell pwd)
+VERSION=$(shell cat .version)
+NEXT=$(shell expr $(VERSION) + 1)
+
 .DEFAULT_GOAL := install
 
 
@@ -14,6 +17,12 @@ create: env
 	-gcloud app create --region=us-central -q
 
 install: env create deploy permissions check
+
+
+version: 
+	@printf $(NEXT) > .version
+	@echo Version is: $(NEXT)
+	cp .version $(BASEDIR)/../game
 
 
 permissions: 
