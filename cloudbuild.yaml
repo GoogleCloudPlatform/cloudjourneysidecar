@@ -1,0 +1,22 @@
+steps:
+- name: "gcr.io/gbl-cloudjourney/make"
+  args: ["prep"]
+  env:
+  - 'CLOUD_JOURNEY_PROJECT=gbl-cloudjourney'
+  - 'CLOUD_JOURNEY_GACODE=UA-138983490-2'
+  - 'JEST_PUPPETEER_CONFIG=/workspace/game/test/jest-puppeteer.config.js'
+  dir: 'game'
+- name: "gcr.io/gbl-cloudjourney/test"
+  args: ["test"]
+  env:
+  - 'CLOUD_JOURNEY_PROJECT=gbl-cloudjourney'
+  - 'CLOUD_JOURNEY_GACODE=UA-138983490-2'
+  - 'JEST_PUPPETEER_CONFIG=/workspace/game/test/jest-puppeteer.config.js'
+  dir: 'game'
+- name: "gcr.io/gbl-cloudjourney/make"
+  args: ["deploy"]
+  env:
+  - 'CLOUD_JOURNEY_PROJECT=gbl-cloudjourney'
+  - 'CLOUD_JOURNEY_GACODE=UA-138983490-2'
+  dir: 'game'
+timeout: "1600s"
