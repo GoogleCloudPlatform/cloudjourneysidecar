@@ -1,39 +1,51 @@
 # Cloud Journey
-The overarching project for Cloud Journey code.
+## Sidecar application
+This is the companion app for Cloud Journey. 
+It must be installed in your GCP project to get Cloud Journey to work. 
 
-## Overview
-The code consists of  4 directories
+### Requirements
+* Create ENV variables
+* `export CLOUD_JOURNEY_ZONE=[Zone to install the app in ]`
+* `export CLOUD_JOURNEY_REGION=[Region to install the app in ]`
+* `export CLOUD_JOURNEY_PROJECT=[ID of a project that you want to use for testing]`
 
+## Steps
+* Create New Project (Must limit length to 30 chars)
+* Open Cloud Shell in Project
+* run `git clone https://github.com/tpryan/GCPQuest-Companion.git`
+* run `cd GCPQuest-Companion`
+* run `make`
+* browse to `https://[project id].appspot.com/status`
 
-| Name  |Folder   |Description   |   
-|---|---|---|
-|Design Assets   |`\assets` | Various original design files     |
-|Game Code   |`\game` | Actual game code that should be edited in RPGMaker      |
-|Game Builder   |`\gamebuilder` | Container code that Cloud Build uses to publish from GCR      |
-|Instruct Launching Container   |`\instruqt`  | Container for launching game on Instruqt platform     |
-|Validator   |`\sidecar`   | App Engine application for valdiating quest completion     |
-|Neos Tutorials   |`\tutorial`    | Neos tutorials that power the in console experience of this application     |
+Should output: 
 
-## How does it all work
-The `game` is hosted on App Engine and is a HTML, JavaScript and CSS app 
-written using [RPGMaker MV](http://www.rpgmakerweb.com/products/programs/rpg-maker-mv). 
-The easiest way to edit it is using the RPGMaker MV IDE.
+```js
+[{
+  "quest": "intro_sys",
+  "complete": false,
+  "notes": "API not enabled yet."
+}, {
+  "quest": "intro_bigdata",
+  "complete": false,
+  "notes": ""
+}, {
+  "quest": "intro_dev",
+  "complete": false,
+  "notes": "API not enabled yet."
+}]
+```
 
-The `game` occasionally requires players perform tasks in an actual GCP project. 
-When players are prompted to perform a task, they launch a 
-[NEOS](http://go/neos) tutorial.  The code for the `tutorials` is where these 
-are kept. However it is important to know that they are here for reference, and 
-to actually change the tutorials on the website, you have to submit to Google3.  
+If that's working **congrats**, you're all set to play. 
 
-In order to check that those tasks have been completed there is a `sidecar` 
-application that users are prompted to run in their own projects in order to 
-interrogate the project about what is currently deployed. 
+## What does it do? 
+The code in this repo when launched as an App Engine Application will 
+interogate your project using Public GCP API's and try to figure out if you 
+have properly completed the steps in Cloud Joruney's tutorials. It will try and 
+figure out 3 things:
 
-## What does it take to add a quest. 
-Each quest is comprise of 3 distinct parts that need to be added to make it 
-work.
+* Is there an f1micro Compute Engine Instance
+* Does it have an attached disk
+* Is there there a Cloud Function named tokengenerator
+* Was a BigQuery query run that searched *bigquery-public-data.usa_names.usa_1910_2013*
 
-1. A NEOS entry in `/tutorials` outlining the task for somone to do. 
-1. A `/sidecar` check of conditions in the project that would satisfy the task
-1. Diaglow and decision login in `/game` that will introduce the quest and 
-handle rewarding success and walking through failure. 
+"This is not an official Google Project."
