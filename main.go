@@ -223,7 +223,7 @@ func checkDev02(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "02_dev"
 
-	builds, err := ListBuildOperations(c)
+	builds, err := listBuildOperations(c)
 	if err != nil {
 		return s, fmt.Errorf("tut_dev2: %v", err)
 	}
