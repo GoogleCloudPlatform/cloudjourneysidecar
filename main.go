@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/version", versionHandler)
+	http.HandleFunc("/build", buildHandler)
 
 	appengine.Main()
 }
@@ -50,26 +51,26 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	statii := StatusList{}
 
-	sqIntro, err := checkIntroSys(c)
+	sysIntro, err := checkIntroSys(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sqIntro.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sysIntro.Quest, err))
 		return
 	}
-	statii = append(statii, sqIntro)
+	statii = append(statii, sysIntro)
 
-	sq02, err := checkSys02(c)
+	sys02, err := checkSys02(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sq02.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sys02.Quest, err))
 		return
 	}
-	statii = append(statii, sq02)
+	statii = append(statii, sys02)
 
-	bqIntro, err := checkIntroBigData(c)
+	dataIntro, err := checkIntroBigData(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", bqIntro.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dataIntro.Quest, err))
 		return
 	}
-	statii = append(statii, bqIntro)
+	statii = append(statii, dataIntro)
 
 	devIntro, err := checkIntroDev(c)
 	if err != nil {
@@ -77,6 +78,13 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	statii = append(statii, devIntro)
+
+	dev02, err := checkDev02(c)
+	if err != nil {
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dev02.Quest, err))
+		return
+	}
+	statii = append(statii, dev02)
 
 	b, err := json.Marshal(statii)
 	if err != nil {
@@ -86,16 +94,16 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-func diskHandler(w http.ResponseWriter, r *http.Request) {
+func buildHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	disks, err := listAllDisks(c)
+	operations, err := ListBuildOperations(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", disks, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
 		return
 	}
 
-	b, err := json.Marshal(disks)
+	b, err := json.Marshal(operations)
 	if err != nil {
 		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
 		return
@@ -207,6 +215,36 @@ func checkIntroDev(c context.Context) (Status, error) {
 			s.Complete = true
 			break
 		}
+	}
+	return s, nil
+}
+
+func checkDev02(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "02_dev"
+
+	builds, err := ListBuildOperations(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_dev2: %v", err)
+	}
+
+	for _, v := range builds {
+		s.Notes = "Could not find 'randomcolor' container image"
+		//&& len(v.Artifacts.Images) > 0 && strings.Index(v.Artifacts.Images[0], "randomcolor" ) >= 0
+		if v.Artifacts != nil && len(v.Artifacts.Images) > 0 {
+
+			for _, image := range v.Artifacts.Images {
+				if strings.Index(image, "randomcolor" ) > 0{
+					s.Complete = true
+					s.Notes = ""
+					break
+				}
+			}
+			if s.Complete{
+				break
+			}
+		}
+
 	}
 	return s, nil
 }
