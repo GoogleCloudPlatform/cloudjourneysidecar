@@ -32,7 +32,7 @@ func getBuildService(c context.Context) (*build.Service, error) {
 }
 
 
-func ListBuildOperations(c context.Context) ([]build.Build, error) {
+func listBuildOperations(c context.Context) ([]build.Build, error) {
 	result := []build.Build{}
 
 	srv, err := getBuildService(c)

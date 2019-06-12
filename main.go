@@ -97,7 +97,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 func buildHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	operations, err := ListBuildOperations(c)
+	operations, err := listBuildOperations(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
 		return
