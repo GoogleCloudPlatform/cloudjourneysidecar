@@ -18,8 +18,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"io/ioutil"
-	"strconv"
 
 	"google.golang.org/appengine/log"
 
@@ -30,8 +28,7 @@ func main() {
 	http.HandleFunc("/", healthHandler)
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/version", versionHandler)
-	http.HandleFunc("/build", buildHandler)
+	http.HandleFunc("/disks", diskHandler)
 
 	appengine.Main()
 }
@@ -51,26 +48,26 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	statii := StatusList{}
 
-	sysIntro, err := checkIntroSys(c)
+	sqIntro, err := checkIntroSys(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sysIntro.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sqIntro.Quest, err))
 		return
 	}
-	statii = append(statii, sysIntro)
+	statii = append(statii, sqIntro)
 
-	sys02, err := checkSys02(c)
+	sq02, err := checkSys02(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sys02.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sq02.Quest, err))
 		return
 	}
-	statii = append(statii, sys02)
+	statii = append(statii, sq02)
 
-	dataIntro, err := checkIntroBigData(c)
+	bqIntro, err := checkIntroBigData(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dataIntro.Quest, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", bqIntro.Quest, err))
 		return
 	}
-	statii = append(statii, dataIntro)
+	statii = append(statii, bqIntro)
 
 	devIntro, err := checkIntroDev(c)
 	if err != nil {
@@ -78,13 +75,6 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	statii = append(statii, devIntro)
-
-	dev02, err := checkDev02(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dev02.Quest, err))
-		return
-	}
-	statii = append(statii, dev02)
 
 	b, err := json.Marshal(statii)
 	if err != nil {
@@ -94,16 +84,16 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-func buildHandler(w http.ResponseWriter, r *http.Request) {
+func diskHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	operations, err := listBuildOperations(c)
+	disks, err := listAllDisks(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", disks, err))
 		return
 	}
 
-	b, err := json.Marshal(operations)
+	b, err := json.Marshal(disks)
 	if err != nil {
 		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
 		return
@@ -114,21 +104,6 @@ func buildHandler(w http.ResponseWriter, r *http.Request) {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	sendMessage(w, "ok")
 	log.Infof(r.Context(), "Health Check triggered.")
-}
-
-func versionHandler(w http.ResponseWriter, r *http.Request) {
-	c := r.Context()
-	v, err := checkVersion(c) 
-	if err != nil {
-		content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, true,err)
-		sendJSON(w, content)
-		log.Warningf(r.Context(), "Error in version check %s.", err)
-		return
-	}
-	
-	content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, false,"Version check working as expected")
-	sendJSON(w, content)
-	log.Infof(r.Context(), "Version check triggered.")
 }
 
 func checkIntroSys(c context.Context) (Status, error) {
@@ -177,6 +152,7 @@ func checkSys02(c context.Context) (Status, error) {
 	return s, nil
 }
 
+
 func checkIntroBigData(c context.Context) (Status, error) {
 	s := Status{}
 	s.Quest = "intro_bigdata"
@@ -189,6 +165,16 @@ func checkIntroBigData(c context.Context) (Status, error) {
 	for _, v := range jobs.Jobs {
 		if strings.Index(v.Configuration.Query.Query, "bigquery-public-data.usa_names.usa_1910_2013") > -1 {
 			t := time.Unix(v.Statistics.EndTime/1000, 0)
+			// start := time.Now() 
+			// limit := start.Add(time.Hour * time.Duration(-1))
+			// d := limit.Sub(t)
+
+			// if (d.Hours() < 1){
+			// 	s.Complete = true
+			// 	s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
+			// 	break
+			// }
+			// s.Notes = fmt.Sprintf("more than an hour old: %s", t.Format("2006-01-02T15:04:05"))
 			s.Complete = true
 			s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
 			
@@ -218,47 +204,3 @@ func checkIntroDev(c context.Context) (Status, error) {
 	}
 	return s, nil
 }
-
-func checkDev02(c context.Context) (Status, error) {
-	s := Status{}
-	s.Quest = "02_dev"
-
-	builds, err := listBuildOperations(c)
-	if err != nil {
-		return s, fmt.Errorf("tut_dev2: %v", err)
-	}
-
-	for _, v := range builds {
-		s.Notes = "Could not find 'randomcolor' container image"
-		//&& len(v.Artifacts.Images) > 0 && strings.Index(v.Artifacts.Images[0], "randomcolor" ) >= 0
-		if v.Artifacts != nil && len(v.Artifacts.Images) > 0 {
-
-			for _, image := range v.Artifacts.Images {
-				if strings.Index(image, "randomcolor" ) > 0{
-					s.Complete = true
-					s.Notes = ""
-					break
-				}
-			}
-			if s.Complete{
-				break
-			}
-		}
-
-	}
-	return s, nil
-}
-
-func checkVersion(c context.Context) (int, error) {
-	dat, err := ioutil.ReadFile(".version")
-    if err != nil {
-		return 0, err
-	}
-	i, err := strconv.Atoi(string(dat))
-	if err != nil {
-		return 0, err
-	}
-	return i, nil
-
-
-}	
