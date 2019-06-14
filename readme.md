@@ -21,15 +21,15 @@ Should output:
 
 ```js
 [{
-  "quest": "intro_sys",
+  "quest": "sys_01",
   "complete": false,
   "notes": "API not enabled yet."
 }, {
-  "quest": "intro_bigdata",
+  "quest": "data_01",
   "complete": false,
   "notes": ""
 }, {
-  "quest": "intro_dev",
+  "quest": "dev_01",
   "complete": false,
   "notes": "API not enabled yet."
 }]
