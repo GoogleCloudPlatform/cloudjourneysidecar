@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	"google.golang.org/appengine/log"
-
+	storage "cloud.google.com/go/storage"
 	"google.golang.org/appengine"
 )
 
@@ -31,7 +31,8 @@ func main() {
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/version", versionHandler)
-	http.HandleFunc("/build", buildHandler)
+	http.HandleFunc("/run", runHandler)
+	http.HandleFunc("/storage", storageHandler)
 
 	appengine.Main()
 }
@@ -47,44 +48,35 @@ type Status struct {
 // StatusList is a slice of Statii.
 type StatusList []Status
 
+type check interface{
+	
+}
+
+
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	statii := StatusList{}
 
-	sysIntro, err := checkIntroSys(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sysIntro.Quest, err))
-		return
+	checks := []func(context.Context)(Status, error){
+		checkSys01,
+		checkSys02,
+		checkData01,
+		checkData02,
+		checkDev01,
+		checkDev02,
+		checkDev03,
 	}
-	statii = append(statii, sysIntro)
 
-	sys02, err := checkSys02(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", sys02.Quest, err))
-		return
-	}
-	statii = append(statii, sys02)
+	for _, f := range checks {
 
-	dataIntro, err := checkIntroBigData(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dataIntro.Quest, err))
-		return
-	}
-	statii = append(statii, dataIntro)
+		status, err := f(c)
+		if err != nil {
+			handleError(c, w, fmt.Errorf("could not check the status of %s: %v", status.Quest, err))
+			return
+		}
+		statii = append(statii, status)
 
-	devIntro, err := checkIntroDev(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", devIntro.Quest, err))
-		return
 	}
-	statii = append(statii, devIntro)
-
-	dev02, err := checkDev02(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %s: %v", dev02.Quest, err))
-		return
-	}
-	statii = append(statii, dev02)
 
 	b, err := json.Marshal(statii)
 	if err != nil {
@@ -94,16 +86,45 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-func buildHandler(w http.ResponseWriter, r *http.Request) {
+func runHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	operations, err := listBuildOperations(c)
+	operations, err := listAllRunServices(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
 		return
 	}
 
 	b, err := json.Marshal(operations)
+	if err != nil {
+		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
+		return
+	}
+	sendJSON(w, string(b))
+}
+
+func storageHandler(w http.ResponseWriter, r *http.Request) {
+	c := r.Context()
+
+	operations, err := listBuckets(c)
+	if err != nil {
+		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
+		return
+	}
+
+	ops := []storage.BucketAttrs{}
+
+	for _, v := range operations {
+		if (strings.Index(v.Name, "appspot.com") >= 0){
+			continue
+		}
+		if (strings.Index(v.Name, "_cloudbuild") >= 0){
+			continue
+		}
+		ops = append(ops, v)
+	}
+
+	b, err := json.Marshal(ops)
 	if err != nil {
 		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
 		return
@@ -131,9 +152,9 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	log.Infof(r.Context(), "Version check triggered.")
 }
 
-func checkIntroSys(c context.Context) (Status, error) {
+func checkSys01(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "intro_sys"
+	s.Quest = "sys_01"
 
 	vms, err := listAllInstances(c)
 	if err != nil {
@@ -177,9 +198,9 @@ func checkSys02(c context.Context) (Status, error) {
 	return s, nil
 }
 
-func checkIntroBigData(c context.Context) (Status, error) {
+func checkData01(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "intro_bigdata"
+	s.Quest = "data_01"
 
 	jobs, err := listJobs(c)
 	if err != nil {
@@ -197,9 +218,40 @@ func checkIntroBigData(c context.Context) (Status, error) {
 	return s, nil
 }
 
-func checkIntroDev(c context.Context) (Status, error) {
+func checkData02(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "intro_dev"
+	s.Quest = "02_data"
+
+	buckets, err := listBuckets(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_dat2: %v", err)
+	}
+
+	bucks := []storage.BucketAttrs{}
+
+	for _, v := range buckets {
+		if (strings.Index(v.Name, "appspot.com") >= 0){
+			continue
+		}
+		if (strings.Index(v.Name, "_cloudbuild") >= 0){
+			continue
+		}
+		bucks = append(bucks, v)
+	}
+	s.Complete = false
+	s.Notes = "No buckets found"
+
+	if (len(bucks) > 0){
+		s.Complete = true
+		s.Notes = ""
+	}
+
+	return s, nil
+}
+
+func checkDev01(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "dev_01"
 
 	funcs, err := listFunctions(c)
 	if err != nil {
@@ -234,13 +286,36 @@ func checkDev02(c context.Context) (Status, error) {
 		if v.Artifacts != nil && len(v.Artifacts.Images) > 0 {
 
 			for _, image := range v.Artifacts.Images {
-				if strings.Index(image, "randomcolor" ) > 0{
+				if strings.Index(image, "randomcolor" ) >= 0{
 					s.Complete = true
 					s.Notes = ""
 					break
 				}
 			}
 			if s.Complete{
+				break
+			}
+		}
+
+	}
+	return s, nil
+}
+
+func checkDev03(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "03_dev"
+
+	svc, err := listAllRunServices(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_dev3: %v", err)
+	}
+
+	for _, v := range svc {
+		s.Notes = "Could not find 'randomcolor' service"
+		if v.Status != nil  {
+			if strings.Index(v.Status.LatestCreatedRevisionName, "randomcolor" ) >= 0{
+				s.Complete = true
+				s.Notes = ""
 				break
 			}
 		}
