@@ -32,7 +32,7 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/version", versionHandler)
 	http.HandleFunc("/run", runHandler)
-	http.HandleFunc("/storage", storageHandler)
+	http.HandleFunc("/random", randomHandler)
 
 	appengine.Main()
 }
@@ -60,11 +60,15 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	checks := []func(context.Context)(Status, error){
 		checkSys01,
 		checkSys02,
+		checkSys03,
+		checkSys04,
+		checkSys05,
 		checkData01,
 		checkData02,
 		checkDev01,
 		checkDev02,
 		checkDev03,
+
 	}
 
 	for _, f := range checks {
@@ -103,28 +107,16 @@ func runHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-func storageHandler(w http.ResponseWriter, r *http.Request) {
+func randomHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	operations, err := listBuckets(c)
+	items, err := listBackendServices(c)
 	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
+		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", items, err))
 		return
 	}
 
-	ops := []storage.BucketAttrs{}
-
-	for _, v := range operations {
-		if (strings.Index(v.Name, "appspot.com") >= 0){
-			continue
-		}
-		if (strings.Index(v.Name, "_cloudbuild") >= 0){
-			continue
-		}
-		ops = append(ops, v)
-	}
-
-	b, err := json.Marshal(ops)
+	b, err := json.Marshal(items)
 	if err != nil {
 		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
 		return
@@ -154,7 +146,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 
 func checkSys01(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "sys_01"
+	s.Quest = "01_sys"
 
 	vms, err := listAllInstances(c)
 	if err != nil {
@@ -195,6 +187,78 @@ func checkSys02(c context.Context) (Status, error) {
 		}
 
 	}
+	return s, nil
+}
+
+func checkSys03(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "03_sys"
+	s.Complete = false
+	s.Notes = "Could not find a custom image."
+
+	items, err := listImages(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_sys3: %v", err)
+	}
+
+	if (len(items.Items) > 0){
+		s.Complete = true
+		s.Notes = ""
+	}
+
+	return s, nil
+}
+
+func checkSys04(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "04_sys"
+	s.Complete = false
+	s.Notes = "Could not find an instance template."
+
+	items, err := listTemplates(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_sys4: %v", err)
+	}
+
+	if (len(items.Items) > 0){
+		s.Complete = true
+		s.Notes = ""
+	}
+
+	return s, nil
+}
+
+func checkSys05(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "05_sys"
+	s.Complete = false
+	s.Notes = "Could not find an instance group and corresponding backend service."
+
+	groups, err := listAllInstanceGroups(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_sys5: %v", err)
+	}
+
+	backends, err := listBackendServices(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_sys5: %v", err)
+	}
+
+	for _, group := range groups {
+
+		for _, item := range backends.Items{
+			for _, backend := range item.Backends{
+				if backend.Group == group.SelfLink{
+					s.Complete = true
+					s.Notes = ""
+					return s, nil
+				}
+			}
+		}
+	}
+	
+	
+
 	return s, nil
 }
 
@@ -251,7 +315,7 @@ func checkData02(c context.Context) (Status, error) {
 
 func checkDev01(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "dev_01"
+	s.Quest = "01_dev"
 
 	funcs, err := listFunctions(c)
 	if err != nil {

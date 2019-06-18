@@ -14,6 +14,7 @@ import (
 	"context"
 	"sync"
 	"time"
+	"fmt"
 
 	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/oauth2/google"
@@ -102,12 +103,12 @@ func listInstances(c context.Context, zone string) (*compute.InstanceList, error
 		return vms, err
 	}
 
-	id, err := metadata.ProjectID()
+	projectID, err := metadata.ProjectID()
 	if err != nil {
 		return vms, err
 	}
 
-	return srv.Instances.List(id, zone).Do()
+	return srv.Instances.List(projectID, zone).Do()
 }
 
 func listZones(c context.Context) (*compute.ZoneList, error) {
@@ -118,12 +119,28 @@ func listZones(c context.Context) (*compute.ZoneList, error) {
 		return zones, err
 	}
 
-	id, err := metadata.ProjectID()
+	projectID, err := metadata.ProjectID()
 	if err != nil {
 		return zones, err
 	}
 
-	return srv.Zones.List(id).Do()
+	return srv.Zones.List(projectID).Do()
+}
+
+func listRegions(c context.Context) (*compute.RegionList, error) {
+	regions := new(compute.RegionList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return regions, err
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return regions, err
+	}
+
+	return srv.Regions.List(projectID).Do()
 }
 
 func listDisks(c context.Context, zone string) (*compute.DiskList, error) {
@@ -134,10 +151,168 @@ func listDisks(c context.Context, zone string) (*compute.DiskList, error) {
 		return disks, err
 	}
 
-	id, err := metadata.ProjectID()
+	projectID, err := metadata.ProjectID()
 	if err != nil {
 		return disks, err
 	}
 
-	return srv.Disks.List(id, zone).Do()
+	return srv.Disks.List(projectID, zone).Do()
 }
+
+
+func listImages(c context.Context) (*compute.ImageList, error) {
+	disks := new(compute.ImageList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return disks, err
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return disks, err
+	}
+
+	return srv.Images.List(projectID).Do()
+}
+
+func listTemplates(c context.Context) (*compute.InstanceTemplateList, error) {
+	items := new(compute.InstanceTemplateList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return items, err
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return items, err
+	}
+
+	return srv.InstanceTemplates.List(projectID).Do()
+}
+
+
+
+func listAllInstanceGroups(c context.Context) ([]*compute.InstanceGroup, error) {
+	items := []*compute.InstanceGroup{}
+
+	zones, err := listZones(c)
+	if err != nil {
+		return items, err
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(zones.Items))
+
+
+	for _, zone := range zones.Items {
+
+		go func(name string) {
+
+			l, err := listInstanceGroups(c, name)
+			if err != nil {
+				return 
+			}
+
+			for _, g := range l.Items {
+				items = append(items, g)
+			}
+			wg.Done()
+		}(zone.Name)
+
+	}
+	wg.Wait()
+
+	return items, nil
+}
+
+
+func listInstanceGroups(c context.Context, zone string) (*compute.InstanceGroupList, error) {
+	items := new(compute.InstanceGroupList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return items, err
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return items, err
+	}
+
+	return srv.InstanceGroups.List(projectID, zone).Do()
+}
+
+
+
+
+
+func listAllInstanceGroupManagers(c context.Context) ([]*compute.InstanceGroupManager, error) {
+	items := []*compute.InstanceGroupManager{}
+
+	zones, err := listZones(c)
+	if err != nil {
+		return items, err
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(zones.Items))
+
+
+	for _, zone := range zones.Items {
+
+		go func(name string) {
+
+			l, err := listInstanceGroupManagers(c, name)
+			if err != nil {
+				return 
+			}
+
+			for _, g := range l.Items {
+				items = append(items, g)
+			}
+			wg.Done()
+		}(zone.Name)
+
+	}
+	wg.Wait()
+
+	return items, nil
+}
+
+
+func listInstanceGroupManagers(c context.Context, zone string) (*compute.InstanceGroupManagerList, error) {
+	items := new(compute.InstanceGroupManagerList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return items, err
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return items, err
+	}
+
+	return srv.InstanceGroupManagers.List(projectID, zone).Do()
+}
+
+
+
+func listBackendServices(c context.Context) (*compute.BackendServiceList, error) {
+	items := new(compute.BackendServiceList)
+
+	srv, err := getComputeEngineService(c)
+	if err != nil {
+		return items, fmt.Errorf("getComputeEngineService: %s", err)
+	}
+
+	projectID, err := metadata.ProjectID()
+	if err != nil {
+		return items, fmt.Errorf("getMetaDataProjecID: %s", err)
+	}
+
+
+	return srv.BackendServices.List(projectID).Do()
+}	
