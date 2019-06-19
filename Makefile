@@ -16,7 +16,7 @@ deploy: env permissions
 create: env
 	-gcloud app create --region=us-central -q
 
-install: env create deploy permissions check
+install: env create deploy permissions apis check
 
 
 version: 
@@ -30,6 +30,8 @@ permissions:
 	--member serviceAccount:$(PROJECT)@appspot.gserviceaccount.com \
 	--role roles/bigquery.admin
 
+apis:
+	gcloud services enable sqladmin.googleapis.com --project $(PROJECT)
 
 main:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$(BASEDIR)/main" \

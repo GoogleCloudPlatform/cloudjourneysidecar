@@ -31,7 +31,6 @@ func main() {
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/version", versionHandler)
-	http.HandleFunc("/run", runHandler)
 	http.HandleFunc("/random", randomHandler)
 
 	appengine.Main()
@@ -65,9 +64,12 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		checkSys05,
 		checkData01,
 		checkData02,
+		checkData03,
+		checkData04,
 		checkDev01,
 		checkDev02,
 		checkDev03,
+		checkDev04,
 
 	}
 
@@ -90,27 +92,11 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-func runHandler(w http.ResponseWriter, r *http.Request) {
-	c := r.Context()
-
-	operations, err := listAllRunServices(c)
-	if err != nil {
-		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", operations, err))
-		return
-	}
-
-	b, err := json.Marshal(operations)
-	if err != nil {
-		handleError(c, w, errors.New("Could not marshal the json: "+err.Error()))
-		return
-	}
-	sendJSON(w, string(b))
-}
 
 func randomHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	items, err := listBackendServices(c)
+	items, err := listFirestoreCollection(c, "colors")
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", items, err))
 		return
@@ -264,7 +250,7 @@ func checkSys05(c context.Context) (Status, error) {
 
 func checkData01(c context.Context) (Status, error) {
 	s := Status{}
-	s.Quest = "data_01"
+	s.Quest = "01_data"
 
 	jobs, err := listJobs(c)
 	if err != nil {
@@ -308,6 +294,43 @@ func checkData02(c context.Context) (Status, error) {
 	if (len(bucks) > 0){
 		s.Complete = true
 		s.Notes = ""
+	}
+
+	return s, nil
+}
+
+func checkData03(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "03_data"
+	s.Notes = "Did not find a Cloud SQL server."
+
+	items, err := listSQLServers(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_dsc3: %v", err)
+	}
+
+	for _, v := range items.Items {
+		if v.DatabaseVersion == "MYSQL_5_7" && v.InstanceType == "CLOUD_SQL_INSTANCE"{
+			s.Complete = true
+			s.Notes = fmt.Sprintf("found %s", v.Name)
+		}
+	}
+	return s, nil
+}
+
+func checkData04(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "04_data"
+	s.Notes = "Did not find any Firestore records."
+
+	items, err := listFirestoreCollection(c, "colors")
+	if err != nil {
+		return s, fmt.Errorf("tut_dsc4: %v", err)
+	}
+
+	if len(items) > 0 {
+		s.Complete = true
+		s.Notes = fmt.Sprintf("found references")
 	}
 
 	return s, nil
@@ -384,6 +407,29 @@ func checkDev03(c context.Context) (Status, error) {
 			}
 		}
 
+	}
+	return s, nil
+}
+
+func checkDev04(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "04_dev"
+
+	funcs, err := listFunctions(c)
+	if err != nil {
+		if strings.Index(err.Error(), "Cloud Functions API has not been used") > -1 {
+			s.Notes = "API not enabled yet."
+			return s, nil
+		}
+		return s, fmt.Errorf("tut_dev4: %v", err)
+	}
+
+	for _, v := range funcs.Functions {
+		if v.EventTrigger.EventType == "google.storage.object.finalize" {
+			s.Complete = true
+			s.Notes = fmt.Sprintf("Found function %s", v.Name)
+			break
+		}
 	}
 	return s, nil
 }
