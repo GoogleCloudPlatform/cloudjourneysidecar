@@ -12,18 +12,24 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"time"
 
 	"cloud.google.com/go/compute/metadata"
-	"google.golang.org/api/iterator"
 	storage "cloud.google.com/go/storage"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
-
 func getCloudStorageClient(c context.Context) (storage.Client, error) {
+	cTimed, cancel := context.WithDeadline(c, time.Now().Add(60*time.Second))
+	defer cancel()
+
 	client := new(storage.Client)
 	var err error
 
-	client, err = storage.NewClient(c)
+	client, err = storage.NewClient(cTimed, option.WithScopes(storage.ScopeFullControl))
 	if err != nil {
 		return *client, err
 	}
@@ -47,15 +53,39 @@ func listBuckets(c context.Context) ([]storage.BucketAttrs, error) {
 
 	it := client.Buckets(c, id)
 	for {
-        battrs, err := it.Next()
-        if err == iterator.Done {
-                break
-        }
-        if err != nil {
-                return nil, err
-        }
-        buckets = append(buckets, *battrs)
-}
+		battrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		buckets = append(buckets, *battrs)
+	}
 
 	return buckets, nil
+}
+
+func objectExists(c context.Context, bucketName, fileName string) (bool, error) {
+
+	client, err := getCloudStorageClient(c)
+	if err != nil {
+		return false, fmt.Errorf("could not get client: %s", err)
+	}
+
+	file, err := client.Bucket(bucketName).Object(fileName).NewReader(c)
+
+	if err != nil {
+		if err == storage.ErrObjectNotExist {
+			return false, nil
+		}
+		return false, fmt.Errorf("could not get object: %s bucket: %s file: %s", err, bucketName, fileName)
+	}
+	_, err = ioutil.ReadAll(file)
+	defer file.Close()
+	if err != nil {
+		return false, fmt.Errorf("could not read file: %s", err)
+	}
+
+	return true, nil
 }

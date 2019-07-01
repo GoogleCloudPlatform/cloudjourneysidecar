@@ -32,6 +32,7 @@ permissions:
 
 apis:
 	gcloud services enable sqladmin.googleapis.com --project $(PROJECT)
+	gcloud services enable translate.googleapis.com --project $(PROJECT)
 
 main:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$(BASEDIR)/main" \

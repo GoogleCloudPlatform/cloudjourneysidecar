@@ -15,15 +15,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
-	"io/ioutil"
-	"strconv"
 
-	"google.golang.org/appengine/log"
 	storage "cloud.google.com/go/storage"
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 )
 
 func main() {
@@ -47,16 +47,14 @@ type Status struct {
 // StatusList is a slice of Statii.
 type StatusList []Status
 
-type check interface{
-	
+type check interface {
 }
-
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	statii := StatusList{}
 
-	checks := []func(context.Context)(Status, error){
+	checks := []func(context.Context) (Status, error){
 		checkSys01,
 		checkSys02,
 		checkSys03,
@@ -66,11 +64,12 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		checkData02,
 		checkData03,
 		checkData04,
+		checkData05,
 		checkDev01,
 		checkDev02,
 		checkDev03,
 		checkDev04,
-
+		checkDev05,
 	}
 
 	for _, f := range checks {
@@ -92,11 +91,11 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, string(b))
 }
 
-
 func randomHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
-	items, err := listFirestoreCollection(c, "colors")
+
+	items, err := listAllMemoryStoreInstances(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", items, err))
 		return
@@ -117,15 +116,15 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
-	v, err := checkVersion(c) 
+	v, err := checkVersion(c)
 	if err != nil {
-		content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, true,err)
+		content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, true, err)
 		sendJSON(w, content)
 		log.Warningf(r.Context(), "Error in version check %s.", err)
 		return
 	}
-	
-	content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, false,"Version check working as expected")
+
+	content := fmt.Sprintf("{\"version\" : %d, \"update\" : %t, \"notes\" : \"%s\"}", v, false, "Version check working as expected")
 	sendJSON(w, content)
 	log.Infof(r.Context(), "Version check triggered.")
 }
@@ -187,7 +186,7 @@ func checkSys03(c context.Context) (Status, error) {
 		return s, fmt.Errorf("tut_sys3: %v", err)
 	}
 
-	if (len(items.Items) > 0){
+	if len(items.Items) > 0 {
 		s.Complete = true
 		s.Notes = ""
 	}
@@ -206,7 +205,7 @@ func checkSys04(c context.Context) (Status, error) {
 		return s, fmt.Errorf("tut_sys4: %v", err)
 	}
 
-	if (len(items.Items) > 0){
+	if len(items.Items) > 0 {
 		s.Complete = true
 		s.Notes = ""
 	}
@@ -232,9 +231,9 @@ func checkSys05(c context.Context) (Status, error) {
 
 	for _, group := range groups {
 
-		for _, item := range backends.Items{
-			for _, backend := range item.Backends{
-				if backend.Group == group.SelfLink{
+		for _, item := range backends.Items {
+			for _, backend := range item.Backends {
+				if backend.Group == group.SelfLink {
 					s.Complete = true
 					s.Notes = ""
 					return s, nil
@@ -242,8 +241,6 @@ func checkSys05(c context.Context) (Status, error) {
 			}
 		}
 	}
-	
-	
 
 	return s, nil
 }
@@ -262,7 +259,7 @@ func checkData01(c context.Context) (Status, error) {
 			t := time.Unix(v.Statistics.EndTime/1000, 0)
 			s.Complete = true
 			s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
-			
+
 		}
 	}
 	return s, nil
@@ -280,10 +277,10 @@ func checkData02(c context.Context) (Status, error) {
 	bucks := []storage.BucketAttrs{}
 
 	for _, v := range buckets {
-		if (strings.Index(v.Name, "appspot.com") >= 0){
+		if strings.Index(v.Name, "appspot.com") >= 0 {
 			continue
 		}
-		if (strings.Index(v.Name, "_cloudbuild") >= 0){
+		if strings.Index(v.Name, "_cloudbuild") >= 0 {
 			continue
 		}
 		bucks = append(bucks, v)
@@ -291,7 +288,7 @@ func checkData02(c context.Context) (Status, error) {
 	s.Complete = false
 	s.Notes = "No buckets found"
 
-	if (len(bucks) > 0){
+	if len(bucks) > 0 {
 		s.Complete = true
 		s.Notes = ""
 	}
@@ -310,7 +307,7 @@ func checkData03(c context.Context) (Status, error) {
 	}
 
 	for _, v := range items.Items {
-		if v.DatabaseVersion == "MYSQL_5_7" && v.InstanceType == "CLOUD_SQL_INSTANCE"{
+		if v.DatabaseVersion == "MYSQL_5_7" && v.InstanceType == "CLOUD_SQL_INSTANCE" {
 			s.Complete = true
 			s.Notes = fmt.Sprintf("found %s", v.Name)
 		}
@@ -331,6 +328,24 @@ func checkData04(c context.Context) (Status, error) {
 	if len(items) > 0 {
 		s.Complete = true
 		s.Notes = fmt.Sprintf("found references")
+	}
+
+	return s, nil
+}
+
+func checkData05(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "05_data"
+	s.Notes = "Did not find any Memorystore instances."
+
+	items, err := listAllMemoryStoreInstances(c)
+	if err != nil {
+		return s, fmt.Errorf("tut_dsc5: %v", err)
+	}
+
+	if len(items) > 0 {
+		s.Complete = true
+		s.Notes = fmt.Sprintf("found %s", items[0].Name)
 	}
 
 	return s, nil
@@ -373,13 +388,13 @@ func checkDev02(c context.Context) (Status, error) {
 		if v.Artifacts != nil && len(v.Artifacts.Images) > 0 {
 
 			for _, image := range v.Artifacts.Images {
-				if strings.Index(image, "randomcolor" ) >= 0{
+				if strings.Index(image, "randomcolor") >= 0 {
 					s.Complete = true
 					s.Notes = ""
 					break
 				}
 			}
-			if s.Complete{
+			if s.Complete {
 				break
 			}
 		}
@@ -399,8 +414,8 @@ func checkDev03(c context.Context) (Status, error) {
 
 	for _, v := range svc {
 		s.Notes = "Could not find 'randomcolor' service"
-		if v.Status != nil  {
-			if strings.Index(v.Status.LatestCreatedRevisionName, "randomcolor" ) >= 0{
+		if v.Status != nil {
+			if strings.Index(v.Status.LatestCreatedRevisionName, "randomcolor") >= 0 {
 				s.Complete = true
 				s.Notes = ""
 				break
@@ -434,9 +449,53 @@ func checkDev04(c context.Context) (Status, error) {
 	return s, nil
 }
 
+func checkDev05(c context.Context) (Status, error) {
+	s := Status{}
+	s.Quest = "05_dev"
+	objectName := "translation/test.txt"
+
+	funcs, err := listFunctions(c)
+	if err != nil {
+		if strings.Index(err.Error(), "Cloud Functions API has not been used") > -1 {
+			s.Notes = "API not enabled yet."
+			return s, nil
+		}
+		return s, fmt.Errorf("tut_dev5: %v", err)
+	}
+
+	for _, v := range funcs.Functions {
+		if v.EventTrigger != nil {
+			if v.EventTrigger.EventType == "google.storage.object.finalize" {
+				bucket := listLast(v.EventTrigger.Resource, "/")
+
+				exists, err := objectExists(c, bucket, objectName)
+				if err != nil {
+					if strings.Index(err.Error(), storage.ErrObjectNotExist.Error()) > -1 {
+						continue
+					}
+					return s, fmt.Errorf("could not verify bucket and file %v/%s err: %v", bucket, objectName, err)
+				}
+
+				s.Complete = exists
+				if exists {
+					s.Notes = fmt.Sprintf("Found function %s found bucket %s, found object %s", v.Name, bucket, objectName)
+					break
+				}
+
+			}
+		}
+	}
+	return s, nil
+}
+
+func listLast(string, delimiter string) string {
+	ss := strings.Split(string, "/")
+	return ss[len(ss)-1]
+}
+
 func checkVersion(c context.Context) (int, error) {
 	dat, err := ioutil.ReadFile(".version")
-    if err != nil {
+	if err != nil {
 		return 0, err
 	}
 	i, err := strconv.Atoi(string(dat))
@@ -445,5 +504,4 @@ func checkVersion(c context.Context) (int, error) {
 	}
 	return i, nil
 
-
-}	
+}
