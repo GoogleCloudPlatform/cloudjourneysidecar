@@ -54,34 +54,50 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	statii := StatusList{}
 
-	checks := []func(context.Context) (Status, error){
-		checkSys01,
-		checkSys02,
-		checkSys03,
-		checkSys04,
-		checkSys05,
-		checkData01,
-		checkData02,
-		checkData03,
-		checkData04,
-		checkData05,
-		checkDev01,
-		checkDev02,
-		checkDev03,
-		checkDev04,
-		checkDev05,
+
+
+	checks := map[string]func(context.Context) (Status, error){
+		"checkSys01": checkSys01,
+		"checkSys02": checkSys02,
+		"checkSys03": checkSys03,
+		"checkSys04": checkSys04,
+		"checkSys05": checkSys05,
+		"checkData01": checkData01,
+		"checkData02": checkData02,
+		"checkData03": checkData03,
+		"checkData04": checkData04,
+		"checkData05": checkData05,
+		"checkDev01": checkDev01,
+		"checkDev02": checkDev02,
+		"checkDev03": checkDev03,
+		"checkDev04": checkDev04,
+		"checkDev05": checkDev05,
 	}
 
-	for _, f := range checks {
+	quest, ok := r.URL.Query()["quest"]
+    
+    if !ok || len(quest) < 1 {
+		for _, f := range checks {
 
-		status, err := f(c)
+			status, err := f(c)
+			if err != nil {
+				handleError(c, w, fmt.Errorf("could not check the status of %s: %v", status.Quest, err))
+				return
+			}
+			statii = append(statii, status)
+	
+		}
+
+    } else{
+		status, err := checks[quest[0]](c)
 		if err != nil {
 			handleError(c, w, fmt.Errorf("could not check the status of %s: %v", status.Quest, err))
 			return
 		}
 		statii = append(statii, status)
-
 	}
+
+	
 
 	b, err := json.Marshal(statii)
 	if err != nil {
@@ -95,7 +111,7 @@ func randomHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
 
-	items, err := listAllMemoryStoreInstances(c)
+	items, err := listBackendServices(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", items, err))
 		return
