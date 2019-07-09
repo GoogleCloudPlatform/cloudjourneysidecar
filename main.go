@@ -111,7 +111,7 @@ func randomHandler(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 
 
-	items, err := listBackendServices(c)
+	items, err := listFunctions(c)
 	if err != nil {
 		handleError(c, w, fmt.Errorf("could not check the status of %v: %v", items, err))
 		return
@@ -456,7 +456,7 @@ func checkDev04(c context.Context) (Status, error) {
 	}
 
 	for _, v := range funcs.Functions {
-		if v.EventTrigger.EventType == "google.storage.object.finalize" {
+		if v.EventTrigger != nil && v.EventTrigger.EventType == "google.storage.object.finalize" {
 			s.Complete = true
 			s.Notes = fmt.Sprintf("Found function %s", v.Name)
 			break
@@ -481,7 +481,7 @@ func checkDev05(c context.Context) (Status, error) {
 
 	for _, v := range funcs.Functions {
 		if v.EventTrigger != nil {
-			if v.EventTrigger.EventType == "google.storage.object.finalize" {
+			if v.EventTrigger != nil && v.EventTrigger.EventType == "google.storage.object.finalize" {
 				bucket := listLast(v.EventTrigger.Resource, "/")
 
 				exists, err := objectExists(c, bucket, objectName)
