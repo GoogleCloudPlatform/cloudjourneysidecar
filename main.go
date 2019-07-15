@@ -274,7 +274,7 @@ func checkData01(c context.Context) (Status, error) {
 		if strings.Index(v.Configuration.Query.Query, "bigquery-public-data.usa_names.usa_1910_2013") > -1 {
 			t := time.Unix(v.Statistics.EndTime/1000, 0)
 			s.Complete = true
-			s.Notes = fmt.Sprintf("%s", t.Format("2006-01-02T15:04:05"))
+			s.Notes = fmt.Sprintf("Query run at: %s", t.Format("Jan 2 2006 at 15:04:05"))
 
 		}
 	}
